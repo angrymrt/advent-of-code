@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace day9
@@ -19,17 +21,37 @@ namespace day9
         }
         static long FindAnswerPart2(long[] xmasData, long answerPart1){
             for(int i = 0; i < xmasData.Length; i++){
-                var sum = xmasData[i];
                 for(int j = i+1; j < xmasData.Length; j++){
-                    //sum = sum + xmasData[j];
                     var contiguousSet = xmasData.Skip(i).Take(j - i);
-                    sum = contiguousSet.Sum();
+                    var sum = contiguousSet.Sum();
                     if(sum == answerPart1) {
-                        //var contiguousSet = xmasData.Skip(i).Take(j - i);
                         return contiguousSet.Min() + contiguousSet.Max();
                     }
                     if(sum > answerPart1) break;
                 }
+            }
+            return -1;
+        }
+        static long FindAnswerPart2LinkedList(LinkedList<long> linkedList, long answerPart1){
+            var node = linkedList.First;
+            while(node != null){
+                long sum = 0;
+                var subNode = node;
+                while(sum < answerPart1){
+                    sum += subNode.Value;
+                    subNode = subNode.Next;
+                }
+                if(sum == answerPart1) {
+                    var min = subNode.Value;
+                    var max = subNode.Value;
+                    while(subNode != node) {
+                        subNode = subNode.Previous;
+                        if(min > subNode.Value) min = subNode.Value;
+                        if(max < subNode.Value) max = subNode.Value;
+                    }
+                    return min + max;
+                }
+                node = node.Next;
             }
             return -1;
         }
@@ -44,7 +66,20 @@ namespace day9
             Console.WriteLine($"Day 9, answer part 1: {answerPart1}");
 
             Console.WriteLine($"Day 9, test answer part 2: {FindAnswerPart2(testData, 127)}");
-            Console.WriteLine($"Day 9, answer part 2: {FindAnswerPart2(xmasData, answerPart1)}");
+
+            var sw = new Stopwatch();
+            sw.Start();
+            xmasData = input.Split(Environment.NewLine).Select(x => long.Parse(x)).ToArray();
+            var answerPart2 = FindAnswerPart2(xmasData, answerPart1);
+            sw.Stop();
+            Console.WriteLine($"Day 9, answer part 2: {answerPart2} ({sw.Elapsed})");
+
+            sw = new Stopwatch();
+            sw.Start();
+            var ll = new LinkedList<long>(input.Split(Environment.NewLine).Select(long.Parse));
+            var llAnswer = FindAnswerPart2LinkedList(ll, answerPart1);
+            sw.Stop();
+            Console.WriteLine($"Day 9, answer part 2 LL: {llAnswer} ({sw.Elapsed})");
         }
         private static string testInput = @"35
 20
