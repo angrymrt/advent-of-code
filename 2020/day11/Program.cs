@@ -11,7 +11,7 @@ namespace day11
             Rows = new LinkedList<string>(raw.Split(Environment.NewLine));
         }
 
-        public Layout ApplyRules() {
+        public Layout ApplyRules1() {
             var newLayout = new StringBuilder();
             var currentRow = Rows.First;
             while(currentRow != null) {
@@ -25,10 +25,35 @@ namespace day11
                             newLayout.Append('.');
                             break;
                         case 'L':
-                            newLayout.Append(CountOccupiedAdjacentSeats(currentRow, i) == 0 ? '#' : 'L');
+                            newLayout.Append(CountOccupiedAdjacentSeats1(currentRow, i) == 0 ? '#' : 'L');
                             break;
                         case '#':
-                            newLayout.Append(CountOccupiedAdjacentSeats(currentRow, i) > 3 ? 'L' : '#');
+                            newLayout.Append(CountOccupiedAdjacentSeats1(currentRow, i) > 3 ? 'L' : '#');
+                            break;
+                    }
+                }
+                currentRow = currentRow.Next;
+            }
+            return new Layout(newLayout.ToString());
+        }
+        public Layout ApplyRules2() {
+            var newLayout = new StringBuilder();
+            var currentRow = Rows.First;
+            while(currentRow != null) {
+                if(currentRow.Previous != null) {
+                    newLayout.AppendLine();
+                }
+                for(int i = 0; i < currentRow.Value.Length; i++){
+                    var currentPos = currentRow.Value[i];
+                    switch (currentPos){
+                        case '.':
+                            newLayout.Append('.');
+                            break;
+                        case 'L':
+                            newLayout.Append(CountOccupiedAdjacentSeats2(currentRow, i) == 0 ? '#' : 'L');
+                            break;
+                        case '#':
+                            newLayout.Append(CountOccupiedAdjacentSeats2(currentRow, i) > 4 ? 'L' : '#');
                             break;
                     }
                 }
@@ -37,7 +62,7 @@ namespace day11
             return new Layout(newLayout.ToString());
         }
         
-        public int CountOccupiedAdjacentSeats(LinkedListNode<string> currentRow, int currentIndex) {
+        public int CountOccupiedAdjacentSeats1(LinkedListNode<string> currentRow, int currentIndex) {
             int result = 0;
             string previousRow = currentRow.Previous?.Value;
             string nextRow = currentRow.Next?.Value;
@@ -60,6 +85,106 @@ namespace day11
             }
             return result;
         }
+        public int CountOccupiedAdjacentSeats2(LinkedListNode<string> currentRow, int currentIndex) {
+            int result = 0;
+            int rowLength = currentRow.Value.Length;
+
+            // Get north seat..
+            var row = currentRow.Previous;
+            while(row != null) {
+                if(row.Value[currentIndex] == '.'){
+                    row = row.Previous;
+                }else{
+                    result += row.Value[currentIndex] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+            // Get north west seat..
+            row = currentRow.Previous;
+            var col = currentIndex - 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    row = row.Previous;
+                    col--;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+            // Get north east seat..
+            row = currentRow.Previous;
+            col = currentIndex + 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    row = row.Previous;
+                    col++;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+
+            // Get west seat..
+            row = currentRow;
+            col = currentIndex - 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    col--;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+            // Get east seat..
+            row = currentRow;
+            col = currentIndex + 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    col++;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+
+            // Get south seat..
+            row = currentRow.Next;
+            col = currentIndex;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    row = row.Next;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+            // Get south west seat..
+            row = currentRow.Next;
+            col = currentIndex - 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    row = row.Next;
+                    col--;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+            // Get south east seat..
+            row = currentRow.Next;
+            col = currentIndex + 1;
+            while(row != null && col >= 0 && col < rowLength) {
+                if(row.Value[col] == '.'){
+                    row = row.Next;
+                    col++;
+                }else{
+                    result += row.Value[col] == '#' ? 1 : 0;
+                    break;
+                }
+            }
+
+            return result;
+        }
         public int CountOccupied(){
             return Raw.Count(x => x == '#');
         }
@@ -72,9 +197,23 @@ namespace day11
             var layout = new Layout(input);
             var newLayout = (Layout)null;
             while(true) {
-                Console.WriteLine();
-                Console.WriteLine(layout.Raw);
-                newLayout = layout.ApplyRules();
+                //Console.WriteLine();
+                //Console.WriteLine(layout.Raw);
+                newLayout = layout.ApplyRules1();
+                if(newLayout.Raw == layout.Raw) {
+                    break;
+                }
+                layout = newLayout;
+            }
+            return newLayout;
+        }
+        public static Layout Solve2(string input) {
+            var layout = new Layout(input);
+            var newLayout = (Layout)null;
+            while(true) {
+                //Console.WriteLine();
+                //Console.WriteLine(layout.Raw);
+                newLayout = layout.ApplyRules2();
                 if(newLayout.Raw == layout.Raw) {
                     break;
                 }
@@ -89,10 +228,18 @@ namespace day11
             var layout = Solve(testInput);
             answer1 = layout.CountOccupied();
             Console.WriteLine($"Answer for day 11, test input, part 1: {answer1}.");
+
+            layout = Solve2(testInput);
+            var answer2 = layout.CountOccupied();
+            Console.WriteLine($"Answer for day 11, test input, part 2: {answer2}.");
             
             layout = Solve(input);
             answer1 = layout.CountOccupied();
             Console.WriteLine($"Answer for day 11, part 1: {answer1}.");
+            
+            layout = Solve2(input);
+            answer2 = layout.CountOccupied();
+            Console.WriteLine($"Answer for day 11, part 2: {answer2}.");
         }
 
         private static string testInput = @"L.LL.LL.LL
