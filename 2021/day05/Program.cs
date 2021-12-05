@@ -33,23 +33,29 @@ namespace day05
             do
             {
                 map[Coord1.X + xDelta, Coord1.Y + yDelta]++;
-                if (xDelta > 0)
+                if (xDelta != 0)
                 {
-                    xDelta--;
+                    if (xDelta > 0)
+                    {
+                        xDelta--;
+                    }
+                    else
+                    {
+                        xDelta++;
+                    }
                 }
-                else
+                if (yDelta != 0)
                 {
-                    xDelta++;
+                    if (yDelta > 0)
+                    {
+                        yDelta--;
+                    }
+                    else
+                    {
+                        yDelta++;
+                    }
                 }
-                if (yDelta > 0)
-                {
-                    yDelta--;
-                }
-                else
-                {
-                    yDelta++;
-                }
-            } while (xDelta != 0);
+            } while (xDelta != 0 || yDelta != 0);
         }
         public VentLine(string input)
         {
@@ -75,7 +81,7 @@ namespace day05
             Console.WriteLine("mapHeight: " + mapHeight);
 
             // Start part 1.
-            var horizontalVentLines = ventLines
+            var horizontalLines = ventLines
                 .Where(v => v.Coord1.X == v.Coord2.X || v.Coord1.Y == v.Coord2.Y)
                 // To array speeds things up considerally, so you don't have to iterate again and again inside the for loop..
                 .ToArray();
@@ -84,13 +90,14 @@ namespace day05
             {
                 for (var j = 0; j < mapHeight; j++)
                 {
-                    map[i, j] = horizontalVentLines.Count(x => x.CoversPoint(i, j));
-                    if (map[i, j] > 1)
+                    var lines = horizontalLines.Where(x => x.Coord1.X == i && x.Coord1.Y == j);
+                    foreach(var line in lines)
                     {
-                        answer++;
+                        line.IncrementMap(map);
                     }
                 }
             }
+            answer = GetAnswer(map, useTestInput);
 
             Console.WriteLine("Answer to part 1: " + answer);
 
@@ -105,29 +112,34 @@ namespace day05
             {
                 for (var j = 0; j < mapHeight; j++)
                 {
-                    var current = diagonalLines.FirstOrDefault(x => x.Coord1.X == i && x.Coord2.Y == j);
-                    if (current != null)
+                    var lines = diagonalLines.Where(x => x.Coord1.X == i && x.Coord1.Y == j);
+                    foreach(var line in lines)
                     {
-                        current.IncrementMap(map);
+                        line.IncrementMap(map);
                     }
                 }
             }
-            answer = 0;
-            for (var i = 0; i < mapWidth; i++)
+            answer = GetAnswer(map, useTestInput);
+
+            Console.WriteLine("Answer to part 2: " + answer);
+        }
+
+        private static int GetAnswer(int[,] map, bool useTestInput)
+        {
+            var answer = 0;
+            for (var i = 0; i < map.GetLength(0); i++)
             {
-                for (var j = 0; j < mapHeight; j++)
+                for (var j = 0; j < map.GetLength(1); j++)
                 {
-                    if(useTestInput) Console.Write(map[j, i]);
+                    if (useTestInput) Console.Write(map[j, i]);
                     if (map[j, i] > 1)
                     {
                         answer++;
                     }
                 }
-                if(useTestInput) Console.WriteLine();
+                if (useTestInput) Console.WriteLine();
             }
-
-
-            Console.WriteLine("Answer to part 2: " + answer);
+            return answer;
         }
 
         public static string[] testInput = {
