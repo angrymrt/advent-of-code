@@ -9,24 +9,8 @@ namespace day05
     {
         public readonly Point Coord1;
         public readonly Point Coord2;
-        public bool CoversPoint(int x, int y)
-        {
-            return
-                (
-                    Coord1.X >= x && Coord2.X <= x
-                    ||
-                    Coord2.X >= x && Coord1.X <= x
-                )
-                &&
-                (
-                    Coord1.Y >= y && Coord2.Y <= y
-                    ||
-                    Coord2.Y >= y && Coord1.Y <= y
-                );
-        }
         public void IncrementMap(int[,] map)
         {
-            // diagonal only..
             map[Coord1.X, Coord1.Y]++;
             var xDelta = Coord2.X - Coord1.X;
             var yDelta = Coord2.Y - Coord1.Y;
@@ -82,20 +66,10 @@ namespace day05
 
             // Start part 1.
             var horizontalLines = ventLines
-                .Where(v => v.Coord1.X == v.Coord2.X || v.Coord1.Y == v.Coord2.Y)
-                // To array speeds things up considerally, so you don't have to iterate again and again inside the for loop..
-                .ToArray();
+                .Where(v => v.Coord1.X == v.Coord2.X || v.Coord1.Y == v.Coord2.Y);
             var map = new int[mapWidth, mapHeight];
-            for (var i = 0; i < mapWidth; i++)
-            {
-                for (var j = 0; j < mapHeight; j++)
-                {
-                    var lines = horizontalLines.Where(x => x.Coord1.X == i && x.Coord1.Y == j);
-                    foreach(var line in lines)
-                    {
-                        line.IncrementMap(map);
-                    }
-                }
+            foreach(var line in horizontalLines){
+                line.IncrementMap(map);
             }
             answer = GetAnswer(map, useTestInput);
 
@@ -106,18 +80,9 @@ namespace day05
             var diagonalLines = ventLines
                 .Select(x => new { DifX = x.Coord1.X - x.Coord2.X, DifY = x.Coord1.Y - x.Coord2.Y, VentLine = x })
                 .Where(x => x.DifX == x.DifY || x.DifX == 0 - x.DifY)
-                .Select(x => x.VentLine)
-                .ToArray();
-            for (var i = 0; i < mapWidth; i++)
-            {
-                for (var j = 0; j < mapHeight; j++)
-                {
-                    var lines = diagonalLines.Where(x => x.Coord1.X == i && x.Coord1.Y == j);
-                    foreach(var line in lines)
-                    {
-                        line.IncrementMap(map);
-                    }
-                }
+                .Select(x => x.VentLine);
+            foreach(var line in diagonalLines){
+                line.IncrementMap(map);
             }
             answer = GetAnswer(map, useTestInput);
 
