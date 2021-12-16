@@ -103,7 +103,7 @@ namespace day15
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Day 14!");
+            Console.WriteLine("Day 15!");
             var sw = new Stopwatch();
             long answer = 0;
             var useTestInput = true;
