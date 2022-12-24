@@ -1,17 +1,17 @@
 ﻿internal class CommunicationDevice
 {
-    public int Receive(string datastreamBuffer)
+    public int Receive(string datastreamBuffer, int markerSize = 4)
     {
-        for (var i = 3; i < datastreamBuffer.Length; i++)
+        for (var i = 0; i + markerSize < datastreamBuffer.Length; i++)
         {
-            if (datastreamBuffer[i] != datastreamBuffer[i - 1]
-                && datastreamBuffer[i] != datastreamBuffer[i - 2]
-                && datastreamBuffer[i] != datastreamBuffer[i - 3]
-                && datastreamBuffer[i - 1] != datastreamBuffer[i - 2]
-                && datastreamBuffer[i - 1] != datastreamBuffer[i - 3]
-                && datastreamBuffer[i - 2] != datastreamBuffer[i - 3])
+            var groupCount = datastreamBuffer
+                .Skip(i)
+                .Take(markerSize)
+                .GroupBy(g => g)
+                .Count();
+            if (groupCount == markerSize)
             {
-                return i + 1;
+                return i + markerSize;
             }
         }
         return 0;
@@ -36,7 +36,7 @@ internal class Program
         var answerPart1 = device.Receive(input);
         Console.WriteLine($"Answer part 1: {answerPart1}");
 
-        var answerPart2 = 2;
+        var answerPart2 = device.Receive(input, 14);
         Console.WriteLine($"Answer part 2: {answerPart2}");
     }
 
