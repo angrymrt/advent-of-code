@@ -22,7 +22,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        Console.WriteLine("Advent of code 2022, day 3");
+        Console.WriteLine("Advent of code 2022, day 6");
 
         var device = new CommunicationDevice();
         var testLines = testInput.Split(Environment.NewLine);
