@@ -1,111 +1,208 @@
 ﻿using System.Drawing;
+using System.Text;
 
-internal class Rope
+internal class Knot
 {
-    public Point Head { get; private set; }
-    public Point Tail { get; private set; }
-    public HashSet<Point> TailTrail { get; }
+    public Knot Next { get; set; }
+    public Point Position { get; private set; }
+    public HashSet<Point> Trail { get; } = new HashSet<Point>();
 
-    public Rope()
+    public Knot()
     {
-        Head = new Point(0, 0);
-        Tail = new Point(0, 0);
-        TailTrail = new HashSet<Point>();
-        TailTrail.Add(Tail);
+        Trail.Add(Position);
     }
 
-    public int FollowSeriesOfMotions(string input)
+    public void ExecuteCommand(char direction, int steps)
     {
-        var lines = input.Split(Environment.NewLine);
-        foreach (var line in lines)
-        {
-            var direction = line[0];
-            var steps = int.Parse(line.Substring(2));
-            ExecuteCommand(direction, steps);
-        }
-
-        return TailTrail.Count();
-    }
-
-    private void ExecuteCommand(char direction, int steps)
-    {
-        switch (direction)
-        {
-            case 'U':
-                MoveUp(steps);
-                break;
-            case 'D':
-                MoveDown(steps);
-                break;
-            case 'L':
-                MoveLeft(steps);
-                break;
-            case 'R':
-                MoveRight(steps);
-                break;
-        }
-    }
-
-    private void MoveRight(int steps)
-    {
-        var previousPositionHead = Head;
         for (int i = 0; i < steps; i++)
         {
-            previousPositionHead = Head;
-            Head = new Point(Head.X + 1, Head.Y);
-            if(!PointsTouch(Head, Tail)) {
-                Tail = previousPositionHead;
-                TailTrail.Add(Tail);
+            switch (direction)
+            {
+                case 'U':
+                    MoveUp();
+                    break;
+                case 'D':
+                    MoveDown();
+                    break;
+                case 'L':
+                    MoveLeft();
+                    break;
+                case 'R':
+                    MoveRight();
+                    break;
             }
         }
     }
 
+    private void MoveLeft()
+    {
+        MoveTo(new Point(Position.X - 1, Position.Y));
+    }
+
+    private void MoveDown()
+    {
+        MoveTo(new Point(Position.X, Position.Y - 1));
+    }
+
+    private void MoveUp()
+    {
+        MoveTo(new Point(Position.X, Position.Y + 1));
+    }
+
+    private void MoveRight()
+    {
+        MoveTo(new Point(Position.X + 1, Position.Y));
+    }
+
+    private void Follow(Knot knot)
+    {
+        if (KnotsTouch(knot))
+        {
+            return;
+        }
+        if (AllignedHorizontally(knot))
+        {
+            if (knot.Position.X > Position.X)
+            {
+                MoveRight();
+            }
+            else
+            {
+                MoveLeft();
+            }
+            return;
+        }
+        if (AllignedVertically(knot))
+        {
+            if (knot.Position.Y > Position.Y)
+            {
+                MoveUp();
+            }
+            else
+            {
+                MoveDown();
+            }
+            return;
+        }
+        MoveTo(GetDiagonalTouching(knot));
+    }
+
+    private void MoveTo(Point point)
+    {
+        Position = point;
+        Trail.Add(point);
+        if (Next != null)
+        {
+            Next.Follow(this);
+        }
+    }
+
+    private Point GetDiagonalTouching(Knot knot)
+    {
+        return new Point[] {
+            new Point(Position.X - 1, Position.Y - 1),
+            new Point(Position.X - 1, Position.Y + 1),
+            new Point(Position.X + 1, Position.Y - 1),
+            new Point(Position.X + 1, Position.Y + 1),
+        }.First(x => PointsTouch(knot.Position, x));
+    }
+
+    private bool AllignedHorizontally(Knot knot)
+    {
+        return Position.Y == knot.Position.Y;
+    }
+
+    private bool AllignedVertically(Knot knot)
+    {
+        return Position.X == knot.Position.X;
+    }
+
+    private bool KnotsTouch(Knot knot)
+    {
+        return PointsTouch(Position, knot.Position);
+    }
     private bool PointsTouch(Point a, Point b)
     {
         return a.X >= b.X - 1 && a.X <= b.X + 1
             && a.Y >= b.Y - 1 && a.Y <= b.Y + 1;
     }
 
-    private void MoveDown(int steps)
+}
+
+internal static class Printer
+{
+    public static string Print(Point[] points, int canvasWidth, int canvasHeight, int offsetX, int offsetY)
     {
-        var previousPositionHead = Head;
-        for (int i = 0; i < steps; i++)
+        var result = new StringBuilder();
+        for (int y = canvasHeight - 1; y >= 0; y--)
         {
-            previousPositionHead = Head;
-            Head = new Point(Head.X, Head.Y + 1);
-            if(!PointsTouch(Head, Tail)) {
-                Tail = previousPositionHead;
-                TailTrail.Add(Tail);
+            result.Append(y.ToString().PadLeft(2));
+            for (int x = 0; x < canvasWidth; x++)
+            {
+                if (points.Any(p => p.X + offsetX == x && p.Y + offsetY == y))
+                {
+                    result.Append('#');
+                }
+                else
+                {
+                    result.Append('.');
+                }
             }
+            result.AppendLine();
         }
+        return result.ToString();
+    }
+}
+
+internal class Rope
+{
+    public Knot[] Knots { get; private set; }
+    public Knot Head { get; private set; }
+    public Knot Tail { get; private set; }
+
+    public Rope(int size = 2)
+    {
+        Knots = new Knot[size];
+        for (var i = 0; i < size; i++)
+        {
+            Knots[i] = new Knot();
+        }
+        for (var i = 0; i + 1 < size; i++)
+        {
+            Knots[i].Next = Knots[i + 1];
+        }
+
+        Head = Knots[0];
+        Tail = Knots[size - 1];
     }
 
-    private void MoveLeft(int steps)
+    public int FollowSeriesOfMotions(string input, bool print = false)
     {
-        var previousPositionHead = Head;
-        for (int i = 0; i < steps; i++)
+        if (print)
         {
-            previousPositionHead = Head;
-            Head = new Point(Head.X - 1, Head.Y);
-            if(!PointsTouch(Head, Tail)) {
-                Tail = previousPositionHead;
-                TailTrail.Add(Tail);
-            }
+            Console.WriteLine("Initial state:");
+            Console.WriteLine(Printer.Print(Knots.Select(x => x.Position).ToArray(), 26, 21, 12, 6)); // 26x21
         }
-    }
 
-    private void MoveUp(int steps)
-    {
-        var previousPositionHead = Head;
-        for (int i = 0; i < steps; i++)
+        var lines = input.Split(Environment.NewLine);
+        foreach (var line in lines)
         {
-            previousPositionHead = Head;
-            Head = new Point(Head.X, Head.Y - 1);
-            if(!PointsTouch(Head, Tail)) {
-                Tail = previousPositionHead;
-                TailTrail.Add(Tail);
+            var direction = line[0];
+            var steps = int.Parse(line.Substring(2));
+            Head.ExecuteCommand(direction, steps);
+            if (print)
+            {
+                Console.WriteLine($"Command: {direction} {steps}");
+                Console.WriteLine(Printer.Print(Knots.Select(x => x.Position).ToArray(), 26, 21, 12, 6)); // 26x21
             }
         }
+
+        if (print)
+        {
+            Console.WriteLine("Tail trail:");
+            Console.WriteLine(Printer.Print(Tail.Trail.ToArray(), 26, 21, 12, 6)); // 26x21
+        }
+        return Tail.Trail.Count();
     }
 }
 
@@ -123,10 +220,12 @@ internal class Program
         var answerPart1 = rope.FollowSeriesOfMotions(input);
         Console.WriteLine($"Answer part 1: {answerPart1}");
 
-        var testAnswerPart2 = 2;
+        var testRopePart2 = new Rope(10);
+        var testAnswerPart2 = testRopePart2.FollowSeriesOfMotions(testInput2, true);
         Console.WriteLine($"Test answer part 2: {testAnswerPart2}");
 
-        var answerPart2 = 2;
+        var ropePart2 = new Rope(10);
+        var answerPart2 = ropePart2.FollowSeriesOfMotions(input);
         Console.WriteLine($"Answer part 2: {answerPart2}");
     }
 
@@ -138,6 +237,14 @@ R 4
 D 1
 L 5
 R 2";
+    private static string testInput2 = @"R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20";
     private static string input = @"U 1
 L 2
 U 2
